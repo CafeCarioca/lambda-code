@@ -10,7 +10,7 @@ export const handler = async (event) => {
   `).join('');
 
   const emailParams = {
-    Source: 'your-email@example.com', // Cambia esto por tu dirección de correo verificada en SES
+    Source: 'enzo@elcarioca.com.uy', // Cambia esto por tu dirección de correo verificada en SES
     Destination: {
       ToAddresses: [email]
     },

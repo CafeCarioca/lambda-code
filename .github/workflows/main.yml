@@ -1,0 +1,41 @@
+name: Zip and Upload Lambda Functions to S3
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-lambda:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Zip
+        run: sudo apt-get install zip -y
+
+      - name: Zip Lambda Functions
+        run: |
+          for dir in $(ls -d */); do
+            zip -r "${dir%/}.zip" "$dir"
+          done
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Upload to S3
+        run: |
+          for file in *.zip; do
+            aws s3 cp "$file" "s3://carioca-lambda-code-bucket-920073c0/$file"
+          done

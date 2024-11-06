@@ -3,10 +3,10 @@ import mysql from 'mysql2/promise';
 
 // Database connection configuration
 const dbConfig = {
-    host: 'mydb.c5q62sc8kur1.us-east-1.rds.amazonaws.com',
-    user: 'dbuser',
-    password: 'dbpassword',
-    database: 'cariocaecommerce'
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 };
 
 // Lambda handler function

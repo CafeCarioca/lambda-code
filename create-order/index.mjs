@@ -2,6 +2,7 @@ import mysql from 'mysql2/promise';
 import AWS from 'aws-sdk';
 
 const lambda = new AWS.Lambda();
+const ses = new AWS.SES();
 
 export const handler = async (event) => {
   const connection = await mysql.createConnection({
@@ -107,21 +108,39 @@ export const handler = async (event) => {
       );
     }
 
-    await connection.end();
+    // Llamar a la función Lambda `send-order-email` usando SES
+    const productListHtml = products.map(product => `
+      <li>${product.blendName} - ${product.quantity} x $${product.price.toFixed(2)} (${product.grams}g, ${product.grind})</li>
+    `).join('');
 
-    // Llamar a la función Lambda `send-order-email`
-    const emailPayload = {
-      orderId,
-      email: userDetails.email,
-      total,
-      products
+    const emailParams = {
+      Source: 'enzo@elcarioca.com.uy',
+      Destination: {
+        ToAddresses: [userDetails.email]
+      },
+      Message: {
+        Subject: {
+          Data: `Order Confirmation - #${orderId}`
+        },
+        Body: {
+          Html: {
+            Data: `
+              <h1>Thank you for your order!</h1>
+              <p>Your order number is <strong>${orderId}</strong></p>
+              <p>Order Details:</p>
+              <ul>${productListHtml}</ul>
+              <p>Total: $${total.toFixed(2)}</p>
+              <p>We appreciate your business and hope you enjoy your purchase!</p>
+            `
+          }
+        }
+      }
     };
 
-    await lambda.invoke({
-      FunctionName: 'send-order-email',
-      InvocationType: 'Event', // 'Event' para asincrónico, 'RequestResponse' para sincrónico
-      Payload: JSON.stringify(emailPayload)
-    }).promise();
+    await ses.sendEmail(emailParams).promise();
+    console.log(`Order confirmation email sent to ${userDetails.email}`);
+
+    await connection.end();
 
     return {
       statusCode: 200,

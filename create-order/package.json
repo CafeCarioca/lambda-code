@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "aws-sdk": "^2.1691.0",
-    "mysql2": "^3.11.3"
+    "mysql2": "^3.11.3",
+    "nodemailer": "^6.9.16"
   }
 }

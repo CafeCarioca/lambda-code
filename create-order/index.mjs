@@ -1,8 +1,19 @@
 import mysql from 'mysql2/promise';
 import AWS from 'aws-sdk';
+import nodemailer from 'nodemailer';
 
 const lambda = new AWS.Lambda();
-const ses = new AWS.SES();
+
+// Configuración del transporte SMTP
+const transporter = nodemailer.createTransport({
+    host: "email-smtp.us-east-1.amazonaws.com", // Cambia la región si es necesario
+    port: 587,
+    secure: false, // true para el puerto 465, false para otros puertos
+    auth: {
+        user: process.env.SES_SMTP_USER, // Configura esto en tus variables de entorno
+        pass: process.env.SES_SMTP_PASSWORD, // Configura esto en tus variables de entorno
+    },
+});
 
 export const handler = async (event) => {
   const connection = await mysql.createConnection({
@@ -108,36 +119,26 @@ export const handler = async (event) => {
       );
     }
 
-    // Llamar a la función Lambda `send-order-email` usando SES
+    // Enviar el correo electrónico utilizando nodemailer
     const productListHtml = products.map(product => `
       <li>${product.blendName} - ${product.quantity} x $${product.price.toFixed(2)} (${product.grams}g, ${product.grind})</li>
     `).join('');
 
-    const emailParams = {
-      Source: 'enzo@elcarioca.com.uy',
-      Destination: {
-        ToAddresses: [userDetails.email]
-      },
-      Message: {
-        Subject: {
-          Data: `Order Confirmation - #${orderId}`
-        },
-        Body: {
-          Html: {
-            Data: `
-              <h1>Thank you for your order!</h1>
-              <p>Your order number is <strong>${orderId}</strong></p>
-              <p>Order Details:</p>
-              <ul>${productListHtml}</ul>
-              <p>Total: $${total.toFixed(2)}</p>
-              <p>We appreciate your business and hope you enjoy your purchase!</p>
-            `
-          }
-        }
-      }
+    const mailOptions = {
+        from: 'enzo@elcarioca.com.uy',
+        to: userDetails.email,
+        subject: `Order Confirmation - #${orderId}`,
+        html: `
+            <h1>Thank you for your order!</h1>
+            <p>Your order number is <strong>${orderId}</strong></p>
+            <p>Order Details:</p>
+            <ul>${productListHtml}</ul>
+            <p>Total: $${total.toFixed(2)}</p>
+            <p>We appreciate your business and hope you enjoy your purchase!</p>
+        `,
     };
 
-    await ses.sendEmail(emailParams).promise();
+    await transporter.sendMail(mailOptions);
     console.log(`Order confirmation email sent to ${userDetails.email}`);
 
     await connection.end();

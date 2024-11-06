@@ -25,8 +25,8 @@ jobs:
         run: |
           for dir in $(ls -d */); do
             cd "$dir"
-            zip -r "../${dir%/}.zip" *
-            cd -
+            zip -r "../${dir%/}.zip" ./*  # Zipea el contenido del directorio
+            cd ..
           done
 
       - name: Configure AWS Credentials

@@ -17,10 +17,10 @@ const transporter = nodemailer.createTransport({
 
 export const handler = async (event) => {
   const connection = await mysql.createConnection({
-    host: 'mydb.c5q62sc8kur1.us-east-1.rds.amazonaws.com',
-    user: 'dbuser',
-    password: 'dbpassword',
-    database: 'cariocaecommerce'
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
   });
 
   const { order } = JSON.parse(event.body);

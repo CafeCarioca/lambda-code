@@ -39,5 +39,5 @@ jobs:
       - name: Upload to S3
         run: |
           for file in *.zip; do
-            aws s3 cp "$file" "s3://carioca-lambda-code-bucket-920073c0/$file"
+            aws s3 cp "$file" "s3://${{secrets.AWS_BUCKET}}/$file"
           done

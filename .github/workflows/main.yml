@@ -24,7 +24,9 @@ jobs:
       - name: Zip Lambda Functions
         run: |
           for dir in $(ls -d */); do
-            zip -r "${dir%/}.zip" "$dir"
+            cd "$dir"
+            zip -r "../${dir%/}.zip" ./*  # Zipea el contenido del directorio
+            cd ..
           done
 
       - name: Configure AWS Credentials
